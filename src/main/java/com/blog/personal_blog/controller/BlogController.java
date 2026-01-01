@@ -1,14 +1,20 @@
 package com.blog.personal_blog.controller;
 
+import com.blog.personal_blog.config.UserPrincipal;
 import com.blog.personal_blog.dto.BlogDTO;
 import com.blog.personal_blog.model.Comment;
+import com.blog.personal_blog.model.User;
 import com.blog.personal_blog.service.BlogServiceImpl;
 import com.blog.personal_blog.service.CommentServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/blogs")
@@ -63,9 +69,41 @@ public class BlogController {
 
     //like a blog
     @PostMapping("/{id}/like")
-    public ResponseEntity<String> likeBlog(@PathVariable("id") Long blogId){
-        blogService.likeBlog(blogId);
-        return ResponseEntity.ok("like");
+    public ResponseEntity<Map<String, Object>> toggleLike(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+
+        if (userPrincipal == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        User user = userPrincipal.getUser();
+
+        boolean liked = blogService.toggleLike(id, user);
+        long totalLike = blogService.getLikeCount(id);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("liked", liked);
+        response.put("totalLike", totalLike);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/like/status")
+    public ResponseEntity<?> getLikeStatus(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        if (userPrincipal == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        User user = userPrincipal.getUser();
+        boolean liked = blogService.isLikedByUser(id, user);
+
+        return ResponseEntity.ok(
+                Map.of("liked", liked)
+        );
     }
 
     //sharing blog (simple)

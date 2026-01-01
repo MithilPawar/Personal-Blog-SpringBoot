@@ -1,6 +1,7 @@
 package com.blog.personal_blog.service;
 
 import com.blog.personal_blog.dto.BlogDTO;
+import com.blog.personal_blog.model.User;
 
 import java.util.List;
 
@@ -10,5 +11,7 @@ public interface BlogService {
     BlogDTO getBlogById(Long id);
     BlogDTO updateBlog(Long id, BlogDTO blogDTO);
     void deleteBlog(Long id);
-    void likeBlog(Long blogId);
+    Boolean toggleLike(Long blogId, User user);
+    long getLikeCount(Long blogId);
+    boolean isLikedByUser(Long blogId, User user);
 }

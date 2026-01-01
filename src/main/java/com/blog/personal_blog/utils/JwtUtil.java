@@ -20,10 +20,10 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
-    private static final long EXPIRATION_TIME = 1000 * 60 * 60;
+    private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // 24 hours
 
     public String generateToken(String username){
-        Map<String, Objects> claims = new HashMap<>();
+        Map<String, Object> claims = new HashMap<>();
         return Jwts.builder()
                 .claims()
                 .add(claims)

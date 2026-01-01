@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "blogs")
@@ -29,8 +30,6 @@ public class Blog {
     private String author;
 
     private String tags;
-
-    private int likes = 0;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

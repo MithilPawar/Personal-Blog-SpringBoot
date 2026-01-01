@@ -3,18 +3,24 @@ package com.blog.personal_blog.service;
 import com.blog.personal_blog.dto.BlogDTO;
 import com.blog.personal_blog.exception.BlogNotFoundException;
 import com.blog.personal_blog.model.Blog;
+import com.blog.personal_blog.model.BlogLike;
+import com.blog.personal_blog.model.User;
+import com.blog.personal_blog.repository.BlogLikeRepository;
 import com.blog.personal_blog.repository.BlogRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class BlogServiceImpl implements BlogService{
     private final BlogRepository blogRepository;
+    private final BlogLikeRepository blogLikeRepository;
 
-    public BlogServiceImpl(BlogRepository blogRepository){
+    public BlogServiceImpl(BlogRepository blogRepository, BlogLikeRepository blogLikeRepository){
         this.blogRepository  = blogRepository;
+        this.blogLikeRepository = blogLikeRepository;
     }
 
     private BlogDTO mapToDTO(Blog blog) {
@@ -24,7 +30,7 @@ public class BlogServiceImpl implements BlogService{
                 .content(blog.getContent())
                 .author(blog.getAuthor())
                 .tags(blog.getTags())
-                .likes(blog.getLikes())
+                .likes(blogLikeRepository.countByBlogId(blog.getId()))
                 .createdAt(blog.getCreatedAt())
                 .updatedAt(blog.getUpdatedAt())
                 .build();
@@ -37,7 +43,6 @@ public class BlogServiceImpl implements BlogService{
                 .content(dto.getContent())
                 .author(dto.getAuthor())
                 .tags(dto.getTags())
-                .likes(dto.getLikes())
                 .build();
     }
 
@@ -79,10 +84,36 @@ public class BlogServiceImpl implements BlogService{
     }
 
     @Override
-    public void likeBlog(Long blogId) {
+    public Boolean toggleLike(Long blogId, User user){
         Blog blog = blogRepository.findById(blogId)
                 .orElseThrow(() -> new BlogNotFoundException("Blog not found with Id: " + blogId));
-        blog.setLikes(blog.getLikes() + 1);
-        blogRepository.save(blog);
+
+        Optional<BlogLike> existingLike = blogLikeRepository.findByBlogIdAndUserId(blogId, user.getId());
+
+        if(existingLike.isPresent()){
+            blogLikeRepository.delete(existingLike.get());
+            return false;
+        }else{
+            BlogLike blogLike = BlogLike.builder()
+                    .blog(blog)
+                    .user(user)
+                    .build();
+
+            blogLikeRepository.save(blogLike);
+            return true;
+        }
     }
+
+    @Override
+    public long getLikeCount(Long blogId) {
+        return blogLikeRepository.countByBlogId(blogId);
+    }
+
+    @Override
+    public boolean isLikedByUser(Long blogId, User user) {
+        return blogLikeRepository
+                .findByBlogIdAndUserId(blogId, user.getId())
+                .isPresent();
+    }
+
 }
