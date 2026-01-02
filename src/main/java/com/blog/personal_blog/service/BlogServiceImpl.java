@@ -1,11 +1,12 @@
 package com.blog.personal_blog.service;
 
+import com.blog.personal_blog.Enum.ReactionType;
 import com.blog.personal_blog.dto.BlogDTO;
 import com.blog.personal_blog.exception.BlogNotFoundException;
 import com.blog.personal_blog.model.Blog;
-import com.blog.personal_blog.model.BlogLike;
+import com.blog.personal_blog.model.BlogReaction;
 import com.blog.personal_blog.model.User;
-import com.blog.personal_blog.repository.BlogLikeRepository;
+import com.blog.personal_blog.repository.BlogReactionRepository;
 import com.blog.personal_blog.repository.BlogRepository;
 import org.springframework.stereotype.Service;
 
@@ -16,11 +17,11 @@ import java.util.stream.Collectors;
 @Service
 public class BlogServiceImpl implements BlogService{
     private final BlogRepository blogRepository;
-    private final BlogLikeRepository blogLikeRepository;
+    private final BlogReactionRepository blogReactionRepository;
 
-    public BlogServiceImpl(BlogRepository blogRepository, BlogLikeRepository blogLikeRepository){
+    public BlogServiceImpl(BlogRepository blogRepository, BlogReactionRepository blogReactionRepository){
         this.blogRepository  = blogRepository;
-        this.blogLikeRepository = blogLikeRepository;
+        this.blogReactionRepository = blogReactionRepository;
     }
 
     private BlogDTO mapToDTO(Blog blog) {
@@ -30,7 +31,8 @@ public class BlogServiceImpl implements BlogService{
                 .content(blog.getContent())
                 .author(blog.getAuthor())
                 .tags(blog.getTags())
-                .likes(blogLikeRepository.countByBlogId(blog.getId()))
+                .likes(blogReactionRepository.countByBlogIdAndReactionType(blog.getId(), ReactionType.LIKE))
+                .dislikes(blogReactionRepository.countByBlogIdAndReactionType(blog.getId(), ReactionType.DISLIKE))
                 .createdAt(blog.getCreatedAt())
                 .updatedAt(blog.getUpdatedAt())
                 .build();
@@ -84,36 +86,38 @@ public class BlogServiceImpl implements BlogService{
     }
 
     @Override
-    public Boolean toggleLike(Long blogId, User user){
+    public void react(Long blogId, ReactionType reactionType, User user){
         Blog blog = blogRepository.findById(blogId)
                 .orElseThrow(() -> new BlogNotFoundException("Blog not found with Id: " + blogId));
 
-        Optional<BlogLike> existingLike = blogLikeRepository.findByBlogIdAndUserId(blogId, user.getId());
+        Optional<BlogReaction> existingReaction = blogReactionRepository.findByBlogIdAndUserId(blogId, user.getId());
 
-        if(existingLike.isPresent()){
-            blogLikeRepository.delete(existingLike.get());
-            return false;
+        if(existingReaction.isPresent()){
+            BlogReaction blogReaction = existingReaction.get();
+
+            if(blogReaction.getReactionType() == reactionType){
+                blogReactionRepository.delete(blogReaction);
+            }else{
+                blogReaction.setReactionType(reactionType);
+                blogReactionRepository.save(blogReaction);
+            }
         }else{
-            BlogLike blogLike = BlogLike.builder()
+            BlogReaction newReaction = BlogReaction.builder()
                     .blog(blog)
                     .user(user)
+                    .reactionType(reactionType)
                     .build();
 
-            blogLikeRepository.save(blogLike);
-            return true;
+            blogReactionRepository.save(newReaction);
         }
     }
 
     @Override
-    public long getLikeCount(Long blogId) {
-        return blogLikeRepository.countByBlogId(blogId);
-    }
-
-    @Override
-    public boolean isLikedByUser(Long blogId, User user) {
-        return blogLikeRepository
+    public ReactionType getUserReaction(Long blogId, User user) {
+        return blogReactionRepository
                 .findByBlogIdAndUserId(blogId, user.getId())
-                .isPresent();
+                .map(BlogReaction :: getReactionType)
+                .orElse(null);
     }
 
 }

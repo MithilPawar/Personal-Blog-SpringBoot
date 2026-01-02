@@ -1,7 +1,9 @@
 package com.blog.personal_blog.controller;
 
+import com.blog.personal_blog.Enum.ReactionType;
 import com.blog.personal_blog.config.UserPrincipal;
 import com.blog.personal_blog.dto.BlogDTO;
+import com.blog.personal_blog.dto.ReactionRequestDTO;
 import com.blog.personal_blog.model.Comment;
 import com.blog.personal_blog.model.User;
 import com.blog.personal_blog.service.BlogServiceImpl;
@@ -68,28 +70,25 @@ public class BlogController {
     }
 
     //like a blog
-    @PostMapping("/{id}/like")
-    public ResponseEntity<Map<String, Object>> toggleLike(
+    @PostMapping("/{id}/reaction")
+    public ResponseEntity<?> toggleLike(
             @PathVariable Long id,
+            @RequestBody ReactionRequestDTO reactionRequestDTO,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
 
         if (userPrincipal == null) {
             return ResponseEntity.status(401).build();
         }
 
-        User user = userPrincipal.getUser();
+        blogService.react(
+                id,
+                reactionRequestDTO.getReactionType(),
+                userPrincipal.getUser());
 
-        boolean liked = blogService.toggleLike(id, user);
-        long totalLike = blogService.getLikeCount(id);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("liked", liked);
-        response.put("totalLike", totalLike);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/{id}/like/status")
+    @GetMapping("/{id}/reaction/status")
     public ResponseEntity<?> getLikeStatus(
             @PathVariable Long id,
             @AuthenticationPrincipal UserPrincipal userPrincipal
@@ -98,12 +97,13 @@ public class BlogController {
             return ResponseEntity.status(401).build();
         }
 
-        User user = userPrincipal.getUser();
-        boolean liked = blogService.isLikedByUser(id, user);
+        ReactionType reactionType = blogService.getUserReaction(
+                id,
+                userPrincipal.getUser()
+        );
 
         return ResponseEntity.ok(
-                Map.of("liked", liked)
-        );
+                Map.of("reaction", reactionType));
     }
 
     //sharing blog (simple)

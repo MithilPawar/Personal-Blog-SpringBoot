@@ -32,7 +32,11 @@ public class BlogDTO {
     private String tags;
 
     @Min(value = 0, message = "Likes count cannot be negative")
-    private int likes;
+    private long likes;
+
+    @Min(value = 0, message = "Dislikes count cannot be negative")
+    private long dislikes;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
