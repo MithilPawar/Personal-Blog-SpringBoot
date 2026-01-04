@@ -18,47 +18,73 @@ import java.io.IOException;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtUtil jwtUtil;
     private final MyUserDetailsService myUserDetailsService;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, MyUserDetailsService myUserDetailsService) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil,
+                                   MyUserDetailsService myUserDetailsService) {
         this.jwtUtil = jwtUtil;
         this.myUserDetailsService = myUserDetailsService;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+
+        return path.startsWith("/api/auth");
+    }
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
+
         String authHeader = request.getHeader("Authorization");
-        String token = null;
-        String username = null;
 
         try {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                token = authHeader.substring(7);
-                if (token != null && !token.trim().isEmpty()) {
-                    username = jwtUtil.extractUserName(token);
-                }
-            }
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = myUserDetailsService.loadUserByUsername(username);
-                logger.info("Token present, username: " + username);
-                logger.info("UserDetails loaded: " + (userDetails != null ? userDetails.getUsername() : "null"));
+                String token = authHeader.substring(7);
+                String username = jwtUtil.extractUserName(token);
 
-                if (jwtUtil.validateToken(token, userDetails)) {
-                    logger.info("Token validated successfully");
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails, null, userDetails.getAuthorities());
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                if (username != null &&
+                        SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                    UserDetails userDetails =
+                            myUserDetailsService.loadUserByUsername(username);
+
+                    if (jwtUtil.validateToken(token, userDetails)) {
+
+                        UsernamePasswordAuthenticationToken authToken =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails,
+                                        null,
+                                        userDetails.getAuthorities()
+                                );
+
+                        authToken.setDetails(
+                                new WebAuthenticationDetailsSource()
+                                        .buildDetails(request)
+                        );
+
+                        SecurityContextHolder.getContext()
+                                .setAuthentication(authToken);
+
+                        logger.debug("JWT authentication successful for user: {}", username);
+                    }
                 }
             }
         } catch (Exception e) {
-            logger.error("JWT Authentication failed: {}", e.getMessage());
+            logger.error("JWT authentication failed", e);
         }
+
         filterChain.doFilter(request, response);
     }
 }
+

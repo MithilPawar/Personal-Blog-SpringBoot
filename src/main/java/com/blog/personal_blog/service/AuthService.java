@@ -1,5 +1,6 @@
 package com.blog.personal_blog.service;
 
+import com.blog.personal_blog.Enum.Role;
 import com.blog.personal_blog.config.UserPrincipal;
 import com.blog.personal_blog.dto.LoginRequestDTO;
 import com.blog.personal_blog.dto.LoginResponseDTO;
@@ -35,7 +36,7 @@ public class AuthService {
         User user = User.builder()
                 .username(registerRequestDTO.getUsername())
                 .password(passwordEncoder.encode(registerRequestDTO.getPassword()))
-                .role(registerRequestDTO.getRole() != null ? registerRequestDTO.getRole() : "USER")
+                .role(Role.USER)
                 .build();
         userRepository.save(user);
         return "User registered successfully!";
@@ -47,8 +48,15 @@ public class AuthService {
         );
 
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        String token = jwtUtil.generateToken(userPrincipal.getUsername());
+        String token = jwtUtil.generateToken(
+                userPrincipal.getUsername(),
+                userPrincipal.getUser().getRole().name());
 
-        return new LoginResponseDTO(token, userPrincipal.getUsername(), userPrincipal.getAuthorities().toString());
+        System.out.println(userPrincipal.getUser().getRole().name());
+        return new LoginResponseDTO(
+                token,
+                userPrincipal.getUsername(),
+                userPrincipal.getUser().getRole().name()
+        );
     }
 }

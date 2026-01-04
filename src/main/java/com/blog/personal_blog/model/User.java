@@ -1,5 +1,6 @@
 package com.blog.personal_blog.model;
 
+import com.blog.personal_blog.Enum.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,7 +25,8 @@ public class User {
     private String password;
 
     @Column(nullable = false)
-    private String role = "USER";
+    @Enumerated(EnumType.STRING)
+    private Role role = Role.USER;
 
     @Column(nullable = false)
     private boolean enabled = true;

@@ -28,13 +28,13 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (user.getRole() == null || user.getRole().isEmpty()) {
+        if (user.getRole() == null) {
             return Collections.emptyList();
         }
 
-        return List.of(user.getRole().split(",")).stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.trim().toUpperCase()))
-                .collect(Collectors.toList());
+        return List.of(
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+        );
     }
 
     @Override
