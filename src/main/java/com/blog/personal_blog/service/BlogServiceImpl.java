@@ -8,6 +8,7 @@ import com.blog.personal_blog.model.BlogReaction;
 import com.blog.personal_blog.model.User;
 import com.blog.personal_blog.repository.BlogReactionRepository;
 import com.blog.personal_blog.repository.BlogRepository;
+import com.blog.personal_blog.repository.CommentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,10 +19,12 @@ import java.util.stream.Collectors;
 public class BlogServiceImpl implements BlogService{
     private final BlogRepository blogRepository;
     private final BlogReactionRepository blogReactionRepository;
+    private final CommentRepository commentRepository;
 
-    public BlogServiceImpl(BlogRepository blogRepository, BlogReactionRepository blogReactionRepository){
+    public BlogServiceImpl(BlogRepository blogRepository, BlogReactionRepository blogReactionRepository, CommentRepository commentRepository){
         this.blogRepository  = blogRepository;
         this.blogReactionRepository = blogReactionRepository;
+        this.commentRepository = commentRepository;
     }
 
     private BlogDTO mapToDTO(Blog blog) {
@@ -33,6 +36,7 @@ public class BlogServiceImpl implements BlogService{
                 .tags(blog.getTags())
                 .likes(blogReactionRepository.countByBlogIdAndReactionType(blog.getId(), ReactionType.LIKE))
                 .dislikes(blogReactionRepository.countByBlogIdAndReactionType(blog.getId(), ReactionType.DISLIKE))
+                .commentCount(commentRepository.countByBlogId(blog.getId()))
                 .createdAt(blog.getCreatedAt())
                 .updatedAt(blog.getUpdatedAt())
                 .build();

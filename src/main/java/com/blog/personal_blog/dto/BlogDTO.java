@@ -37,6 +37,9 @@ public class BlogDTO {
     @Min(value = 0, message = "Dislikes count cannot be negative")
     private long dislikes;
 
+    @Min(value = 0, message = "Comment count cannot be negative")
+    private long commentCount;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

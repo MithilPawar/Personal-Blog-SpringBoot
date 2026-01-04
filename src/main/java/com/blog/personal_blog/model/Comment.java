@@ -17,19 +17,20 @@ import java.time.LocalDateTime;
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
-
-    private String authorName;
-    private String authorEmail;
+    private Long id;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String text;
 
     private LocalDateTime createdAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "blog_id", nullable = false)
     private Blog blog;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @PrePersist
     public void onCreate(){
