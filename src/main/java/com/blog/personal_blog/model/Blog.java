@@ -31,6 +31,9 @@ public class Blog {
 
     private String tags;
 
+    @Column(nullable = false)
+    private boolean published = false;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

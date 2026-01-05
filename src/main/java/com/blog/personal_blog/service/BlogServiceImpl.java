@@ -2,6 +2,7 @@ package com.blog.personal_blog.service;
 
 import com.blog.personal_blog.Enum.ReactionType;
 import com.blog.personal_blog.dto.BlogDTO;
+import com.blog.personal_blog.dto.ReactionStatusResponseDTO;
 import com.blog.personal_blog.exception.BlogNotFoundException;
 import com.blog.personal_blog.model.Blog;
 import com.blog.personal_blog.model.BlogReaction;
@@ -42,25 +43,11 @@ public class BlogServiceImpl implements BlogService{
                 .build();
     }
 
-    private Blog mapToEntity(BlogDTO dto) {
-        return Blog.builder()
-                .id(dto.getId())
-                .title(dto.getTitle())
-                .content(dto.getContent())
-                .author(dto.getAuthor())
-                .tags(dto.getTags())
-                .build();
-    }
-
-    @Override
-    public BlogDTO createBlog(BlogDTO blogDTO) {
-        Blog blog = mapToEntity(blogDTO);
-        return mapToDTO(blogRepository.save(blog));
-    }
-
     @Override
     public List<BlogDTO> getAllBlogs() {
-        return blogRepository.findAll().stream()
+        return blogRepository
+                .findByPublishedTrueOrderByCreatedAtDesc()
+                .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
@@ -68,25 +55,10 @@ public class BlogServiceImpl implements BlogService{
     @Override
     public BlogDTO getBlogById(Long id) {
         Blog blog = blogRepository.findById(id)
+                .filter(Blog :: isPublished)
                 .orElseThrow(() -> new BlogNotFoundException("Blog not found with Id: " + id));
+
         return mapToDTO(blog);
-    }
-
-    @Override
-    public BlogDTO updateBlog(Long id, BlogDTO blogDTO) {
-        Blog existingBlog = blogRepository.findById(id)
-                .orElseThrow(() -> new BlogNotFoundException("Blog not found with Id: " + id));
-
-        existingBlog.setTitle(blogDTO.getTitle());
-        existingBlog.setContent(blogDTO.getContent());
-        existingBlog.setTags(blogDTO.getTags());
-        existingBlog.setAuthor(blogDTO.getAuthor());
-        return mapToDTO(blogRepository.save(existingBlog));
-    }
-
-    @Override
-    public void deleteBlog(Long id) {
-        blogRepository.deleteById(id);
     }
 
     @Override
@@ -117,11 +89,12 @@ public class BlogServiceImpl implements BlogService{
     }
 
     @Override
-    public ReactionType getUserReaction(Long blogId, User user) {
+    public ReactionStatusResponseDTO getUserReaction(Long blogId, User user) {
         return blogReactionRepository
                 .findByBlogIdAndUserId(blogId, user.getId())
-                .map(BlogReaction :: getReactionType)
-                .orElse(null);
+                .map(blogReaction ->
+                        new ReactionStatusResponseDTO(blogReaction.getReactionType().name()))
+                .orElse(new ReactionStatusResponseDTO("NONE"));
     }
 
 }

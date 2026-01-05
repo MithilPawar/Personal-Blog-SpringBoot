@@ -6,7 +6,6 @@ import com.blog.personal_blog.dto.BlogDTO;
 import com.blog.personal_blog.dto.ReactionRequestDTO;
 import com.blog.personal_blog.service.BlogServiceImpl;
 import com.blog.personal_blog.service.CommentServiceImpl;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -23,11 +22,6 @@ public class BlogController {
         this.blogService = blogService;
     }
 
-    @PostMapping
-    public BlogDTO createBlog(@Valid @RequestBody BlogDTO blogDTO){
-        return blogService.createBlog(blogDTO);
-    }
-
     @GetMapping
     public List<BlogDTO> getAllBlogs(){
         return blogService.getAllBlogs();
@@ -37,17 +31,6 @@ public class BlogController {
     public BlogDTO getBlogById(@PathVariable Long id)
     {
         return blogService.getBlogById(id);
-    }
-
-    @PutMapping("/{id}")
-    public BlogDTO updateBlog(@PathVariable Long id, @RequestBody BlogDTO blogDTO){
-        return blogService.updateBlog(id, blogDTO);
-    }
-
-    @DeleteMapping("/{id}")
-    public String deleteBlog(@PathVariable Long id){
-        blogService.deleteBlog(id);
-        return "Blog Deleted Successfully";
     }
 
     //like a blog
@@ -70,7 +53,7 @@ public class BlogController {
     }
 
     @GetMapping("/{id}/reaction/status")
-    public ResponseEntity<?> getLikeStatus(
+    public ResponseEntity<?> getReactionStatus(
             @PathVariable Long id,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
@@ -78,13 +61,9 @@ public class BlogController {
             return ResponseEntity.status(401).build();
         }
 
-        ReactionType reactionType = blogService.getUserReaction(
-                id,
-                userPrincipal.getUser()
-        );
-
         return ResponseEntity.ok(
-                Map.of("reaction", reactionType));
+                blogService.getUserReaction(id, userPrincipal.getUser())
+        );
     }
 
     //sharing blog (simple)

@@ -8,6 +8,11 @@ import java.util.List;
 
 @Repository
 public interface BlogRepository extends JpaRepository<Blog, Long> {
+    List<Blog> findByPublishedTrueOrderByCreatedAtDesc();
+
+    List<Blog> findByPublishedTrueAndAuthor(String author);
+    List<Blog> findByPublishedTrueAndTagsContaining(String tag);
+
     List<Blog> findByAuthor(String author);
     List<Blog> findByTagsContaining(String tag);
 }

@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 public class BlogDTO {
     private Long id;
+
     @NotBlank(message = "Title cannot be blank")
     @Size(min = 5, max = 100, message = "Title must be between 5 and 100 characters")
     private String title;
