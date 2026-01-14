@@ -47,7 +47,9 @@ public class AdminBlogController {
     @GetMapping
     public ResponseEntity<?> getAllBlogsForAdmin(
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String search){
-        return ResponseEntity.ok(adminBlogService.getAllBlogsForAdmin(status, search));
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String order ){
+        return ResponseEntity.ok(adminBlogService.getAllBlogsForAdmin(status, search, sortBy, order));
     }
 }

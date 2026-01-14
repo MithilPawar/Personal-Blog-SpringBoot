@@ -5,9 +5,11 @@ import com.blog.personal_blog.dto.BlogResponseDTO;
 import com.blog.personal_blog.model.Blog;
 import com.blog.personal_blog.model.User;
 import com.blog.personal_blog.repository.BlogRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class AdminBlogService {
@@ -66,22 +68,38 @@ public class AdminBlogService {
         return toResponse(blogRepository.save(blog));
     }
 
-    public List<BlogResponseDTO> getAllBlogsForAdmin(String status, String search) {
-        List<Blog> blogs;
+    public List<BlogResponseDTO> getAllBlogsForAdmin(
+            String status,
+            String search,
+            String sortBy,
+            String order) {
+
+        Set<String> allowedSortFields = Set.of("createdAt", "updatedAt");
+
+        if(!allowedSortFields.contains(sortBy)){
+            sortBy = "createdAt";
+        }
+
+        Sort.Direction direction = "asc".equalsIgnoreCase(order) ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+        Sort sort = Sort.by(direction, sortBy);
 
         boolean hasStatus = status != null && !status.equalsIgnoreCase("ALL");
         boolean hasSearch = search != null && !search.isBlank();
 
+        List<Blog> blogs;
+
         if(hasStatus && hasSearch){
             boolean published = status.equalsIgnoreCase("PUBLISHED");
-            blogs = blogRepository.findByPublishedAndTitleContainingIgnoreCase(published, search);
+            blogs = blogRepository.findByPublishedAndTitleContainingIgnoreCase(
+                    published, search, sort);
         }else if(hasStatus){
             boolean published = status.equalsIgnoreCase("PUBLISHED");
-            blogs = blogRepository.findByPublished(published);
+            blogs = blogRepository.findByPublished(published, sort);
         } else if (hasSearch) {
-            blogs = blogRepository.findByTitleContainingIgnoreCase(search);
+            blogs = blogRepository.findByTitleContainingIgnoreCase(search, sort);
         }else{
-            blogs = blogRepository.findAll();
+            blogs = blogRepository.findAll(sort);
         }
 
         return blogs.stream()
