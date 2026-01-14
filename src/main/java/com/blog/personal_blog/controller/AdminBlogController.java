@@ -45,7 +45,9 @@ public class AdminBlogController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllBlogsForAdmin(){
-        return ResponseEntity.ok(adminBlogService.getAllBlogsForAdmin());
+    public ResponseEntity<?> getAllBlogsForAdmin(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String search){
+        return ResponseEntity.ok(adminBlogService.getAllBlogsForAdmin(status, search));
     }
 }

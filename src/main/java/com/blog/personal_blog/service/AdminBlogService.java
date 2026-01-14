@@ -66,9 +66,25 @@ public class AdminBlogService {
         return toResponse(blogRepository.save(blog));
     }
 
-    public List<BlogResponseDTO> getAllBlogsForAdmin() {
-        return blogRepository.findAll()
-                .stream()
+    public List<BlogResponseDTO> getAllBlogsForAdmin(String status, String search) {
+        List<Blog> blogs;
+
+        boolean hasStatus = status != null && !status.equalsIgnoreCase("ALL");
+        boolean hasSearch = search != null && !search.isBlank();
+
+        if(hasStatus && hasSearch){
+            boolean published = status.equalsIgnoreCase("PUBLISHED");
+            blogs = blogRepository.findByPublishedAndTitleContainingIgnoreCase(published, search);
+        }else if(hasStatus){
+            boolean published = status.equalsIgnoreCase("PUBLISHED");
+            blogs = blogRepository.findByPublished(published);
+        } else if (hasSearch) {
+            blogs = blogRepository.findByTitleContainingIgnoreCase(search);
+        }else{
+            blogs = blogRepository.findAll();
+        }
+
+        return blogs.stream()
                 .map(this::toResponse)
                 .toList();
     }

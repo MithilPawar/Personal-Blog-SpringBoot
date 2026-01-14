@@ -10,9 +10,15 @@ import java.util.List;
 public interface BlogRepository extends JpaRepository<Blog, Long> {
     List<Blog> findByPublishedTrueOrderByCreatedAtDesc();
 
+    List<Blog> findByPublished(boolean published);
+
+    List<Blog> findByTitleContainingIgnoreCase(String title);
+
+    List<Blog> findByPublishedAndTitleContainingIgnoreCase(boolean published, String title);
+
     List<Blog> findByPublishedTrueAndAuthor(String author);
+
     List<Blog> findByPublishedTrueAndTagsContaining(String tag);
 
-    List<Blog> findByAuthor(String author);
     List<Blog> findByTagsContaining(String tag);
 }
