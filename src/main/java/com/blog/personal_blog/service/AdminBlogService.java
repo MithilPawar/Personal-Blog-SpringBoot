@@ -2,6 +2,7 @@ package com.blog.personal_blog.service;
 
 import com.blog.personal_blog.dto.AdminBlogRequestDTO;
 import com.blog.personal_blog.dto.BlogResponseDTO;
+import com.blog.personal_blog.exception.BlogNotFoundException;
 import com.blog.personal_blog.model.Blog;
 import com.blog.personal_blog.model.User;
 import com.blog.personal_blog.repository.BlogRepository;
@@ -44,7 +45,7 @@ public class AdminBlogService {
         return toResponse(saved);
     }
 
-    public Object updateBlog(Long id, AdminBlogRequestDTO adminBlogRequestDTO) {
+    public BlogResponseDTO updateBlog(Long id, AdminBlogRequestDTO adminBlogRequestDTO) {
         Blog blog = blogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Blog not found"));
 
@@ -57,12 +58,19 @@ public class AdminBlogService {
     }
 
     public void deleteBlog(Long id) {
-        blogRepository.deleteById(id);
+        Blog blog = blogRepository.findById(id)
+                .orElseThrow(() -> new BlogNotFoundException("Blog not found"));
+
+        if (blog.isPublished()) {
+            throw new IllegalStateException("Cannot delete a published blog");
+        }
+
+        blogRepository.delete(blog);
     }
 
     public BlogResponseDTO togglePublish(Long id) {
         Blog blog = blogRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Blog not found"));
+                .orElseThrow(() -> new BlogNotFoundException("Blog not found"));
 
         blog.setPublished(!blog.isPublished());
         return toResponse(blogRepository.save(blog));
@@ -105,5 +113,12 @@ public class AdminBlogService {
         return blogs.stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    public BlogResponseDTO getBlogById(Long id) {
+        Blog blog = blogRepository.findById(id)
+                .orElseThrow(() -> new BlogNotFoundException("Blog not found with id: " + id));;
+
+        return toResponse(blog);
     }
 }

@@ -52,4 +52,9 @@ public class AdminBlogController {
             @RequestParam(defaultValue = "desc") String order ){
         return ResponseEntity.ok(adminBlogService.getAllBlogsForAdmin(status, search, sortBy, order));
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getBlogById(@PathVariable Long id){
+        return ResponseEntity.ok(adminBlogService.getBlogById(id));
+    }
 }
