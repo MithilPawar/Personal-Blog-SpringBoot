@@ -13,6 +13,9 @@ public class BlogResponseDTO {
     private String content;
     private String author;
     private String tags;
+    private long likes;
+    private long dislikes;
+    private long commentCount;
     private boolean published;
     private LocalDateTime createdAt;
 }

@@ -10,5 +10,6 @@ import java.util.List;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findByBlogOrderByCreatedAtDesc(Blog blog);
+    List<Comment> findTop5ByBlogOrderByCreatedAtDesc(Blog blog);
     long countByBlogId(long blogId);
 }

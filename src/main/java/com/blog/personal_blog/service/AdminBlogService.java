@@ -1,11 +1,15 @@
 package com.blog.personal_blog.service;
 
+import com.blog.personal_blog.Enum.ReactionType;
 import com.blog.personal_blog.dto.AdminBlogRequestDTO;
 import com.blog.personal_blog.dto.BlogResponseDTO;
+import com.blog.personal_blog.dto.CommentResponseDTO;
 import com.blog.personal_blog.exception.BlogNotFoundException;
 import com.blog.personal_blog.model.Blog;
 import com.blog.personal_blog.model.User;
+import com.blog.personal_blog.repository.BlogReactionRepository;
 import com.blog.personal_blog.repository.BlogRepository;
+import com.blog.personal_blog.repository.CommentRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +19,13 @@ import java.util.Set;
 @Service
 public class AdminBlogService {
     private final BlogRepository blogRepository;
+    private final BlogReactionRepository blogReactionRepository;
+    private final CommentRepository commentRepository;
 
-    public AdminBlogService(BlogRepository blogRepository) {
+    public AdminBlogService(BlogRepository blogRepository, BlogReactionRepository blogReactionRepository, CommentRepository commentRepository) {
         this.blogRepository = blogRepository;
+        this.blogReactionRepository = blogReactionRepository;
+        this.commentRepository = commentRepository;
     }
 
     private BlogResponseDTO toResponse(Blog blog) {
@@ -27,6 +35,9 @@ public class AdminBlogService {
                 .content(blog.getContent())
                 .author(blog.getAuthor())
                 .tags(blog.getTags())
+                .likes(blogReactionRepository.countByBlogIdAndReactionType(blog.getId(), ReactionType.LIKE))
+                .dislikes(blogReactionRepository.countByBlogIdAndReactionType(blog.getId(), ReactionType.DISLIKE))
+                .commentCount(commentRepository.countByBlogId(blog.getId()))
                 .published(blog.isPublished())
                 .createdAt(blog.getCreatedAt())
                 .build();
@@ -120,5 +131,20 @@ public class AdminBlogService {
                 .orElseThrow(() -> new BlogNotFoundException("Blog not found with id: " + id));;
 
         return toResponse(blog);
+    }
+
+    public List<CommentResponseDTO> getCommentByBlogId(Long blogId) {
+        Blog blog = blogRepository.findById(blogId)
+                .orElseThrow(() -> new BlogNotFoundException("Blog not found with Id: " + blogId));
+
+        return commentRepository.findByBlogOrderByCreatedAtDesc(blog)
+                .stream()
+                .map(comment -> CommentResponseDTO.builder()
+                        .id(comment.getId())
+                        .authorName(comment.getUser().getUsername())
+                        .text(comment.getText())
+                        .createdAt(comment.getCreatedAt())
+                        .build())
+                .toList();
     }
 }
