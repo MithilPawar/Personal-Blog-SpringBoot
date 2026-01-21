@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface BlogRepository extends JpaRepository<Blog, Long> {
+public interface UserBlogRepository extends JpaRepository<Blog, Long> {
     List<Blog> findByPublishedTrueOrderByCreatedAtDesc();
 
     List<Blog> findByPublished(boolean published, Sort sort);

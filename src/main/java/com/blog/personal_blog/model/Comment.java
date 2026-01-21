@@ -32,6 +32,9 @@ public class Comment {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(nullable = false)
+    private boolean hidden = false;
+
     @PrePersist
     public void onCreate(){
         createdAt = LocalDateTime.now();

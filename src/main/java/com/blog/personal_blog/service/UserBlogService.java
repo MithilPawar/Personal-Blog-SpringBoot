@@ -7,7 +7,7 @@ import com.blog.personal_blog.model.User;
 
 import java.util.List;
 
-public interface BlogService {
+public interface UserBlogService {
     List<BlogDTO> getAllBlogs();
     BlogDTO getBlogById(Long id);
     void react(Long blogId, ReactionType reactionType, User user);

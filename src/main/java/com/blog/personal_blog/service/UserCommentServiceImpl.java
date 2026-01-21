@@ -1,33 +1,33 @@
 package com.blog.personal_blog.service;
 
-import com.blog.personal_blog.dto.CommentResponseDTO;
+import com.blog.personal_blog.dto.UserCommentResponseDTO;
 import com.blog.personal_blog.exception.BlogNotFoundException;
 import com.blog.personal_blog.model.Blog;
 import com.blog.personal_blog.model.Comment;
 import com.blog.personal_blog.model.User;
-import com.blog.personal_blog.repository.BlogRepository;
-import com.blog.personal_blog.repository.CommentRepository;
+import com.blog.personal_blog.repository.UserBlogRepository;
+import com.blog.personal_blog.repository.UserCommentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class CommentServiceImpl implements CommentService{
-    private final CommentRepository commentRepository;
-    private final BlogRepository blogRepository;
+public class UserCommentServiceImpl implements UserCommentService {
+    private final UserCommentRepository userCommentRepository;
+    private final UserBlogRepository userBlogRepository;
 
-    public CommentServiceImpl(CommentRepository commentRepository, BlogRepository blogRepository) {
-        this.commentRepository = commentRepository;
-        this.blogRepository = blogRepository;
+    public UserCommentServiceImpl(UserCommentRepository userCommentRepository, UserBlogRepository userBlogRepository) {
+        this.userCommentRepository = userCommentRepository;
+        this.userBlogRepository = userBlogRepository;
     }
 
     @Override
-    public CommentResponseDTO addComment(Long blogId, String text, User user) {
+    public UserCommentResponseDTO addComment(Long blogId, String text, User user) {
         if (text == null || text.trim().isEmpty()) {
             throw new IllegalArgumentException("Comment text cannot be empty");
         }
 
-        Blog blog = blogRepository.findById(blogId)
+        Blog blog = userBlogRepository.findById(blogId)
                 .orElseThrow(() -> new BlogNotFoundException("Blog not found with Id: " + blogId));
 
         Comment comment = Comment.builder()
@@ -36,9 +36,9 @@ public class CommentServiceImpl implements CommentService{
                 .blog(blog)
                 .build();
 
-        Comment saved = commentRepository.save(comment);
+        Comment saved = userCommentRepository.save(comment);
 
-        return CommentResponseDTO.builder()
+        return UserCommentResponseDTO.builder()
                 .id(saved.getId())
                 .text(saved.getText())
                 .authorName(saved.getUser().getUsername())
@@ -47,13 +47,13 @@ public class CommentServiceImpl implements CommentService{
     }
 
     @Override
-    public List<CommentResponseDTO> getCommentByBlogId(Long blogId) {
-        Blog blog = blogRepository.findById(blogId)
+    public List<UserCommentResponseDTO> getCommentByBlogId(Long blogId) {
+        Blog blog = userBlogRepository.findById(blogId)
                 .orElseThrow(() -> new BlogNotFoundException("Blog not found with Id: " + blogId));
 
-        return commentRepository.findByBlogOrderByCreatedAtDesc(blog)
+        return userCommentRepository.findByBlogAndHiddenFalseOrderByCreatedAtDesc(blog)
                 .stream()
-                .map(comment -> CommentResponseDTO.builder()
+                .map(comment -> UserCommentResponseDTO.builder()
                         .id(comment.getId())
                         .authorName(comment.getUser().getUsername())
                         .text(comment.getText())

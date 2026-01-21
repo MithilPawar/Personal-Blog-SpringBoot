@@ -3,8 +3,9 @@ package com.blog.personal_blog.service;
 import com.blog.personal_blog.dto.AdminCommentResponseDTO;
 import com.blog.personal_blog.exception.BlogNotFoundException;
 import com.blog.personal_blog.model.Blog;
-import com.blog.personal_blog.repository.BlogRepository;
-import com.blog.personal_blog.repository.CommentRepository;
+import com.blog.personal_blog.model.Comment;
+import com.blog.personal_blog.repository.AdminCommentRepository;
+import com.blog.personal_blog.repository.UserBlogRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,25 +16,24 @@ import java.util.List;
 
 @Service
 public class AdminCommentService {
+    private final AdminCommentRepository adminCommentRepository;
+    private final UserBlogRepository userBlogRepository;
 
-    private final CommentRepository commentRepository;
-    private final BlogRepository blogRepository;
-
-    public AdminCommentService(CommentRepository commentRepository,
-                               BlogRepository blogRepository) {
-        this.commentRepository = commentRepository;
-        this.blogRepository = blogRepository;
+    public AdminCommentService(AdminCommentRepository adminCommentRepository,
+                               UserBlogRepository userBlogRepository) {
+        this.adminCommentRepository = adminCommentRepository;
+        this.userBlogRepository = userBlogRepository;
     }
 
     // ✅ Recent comments (Preview page)
     public List<AdminCommentResponseDTO> getRecentComments(Long blogId) {
 
-        Blog blog = blogRepository.findById(blogId)
+        Blog blog = userBlogRepository.findById(blogId)
                 .orElseThrow(() ->
                         new BlogNotFoundException("Blog not found with id: " + blogId)
                 );
 
-        return commentRepository
+        return adminCommentRepository
                 .findTop5ByBlogOrderByCreatedAtDesc(blog)
                 .stream()
                 .limit(3)
@@ -41,6 +41,7 @@ public class AdminCommentService {
                         .id(comment.getId())
                         .authorName(comment.getUser().getUsername())
                         .text(comment.getText())
+                        .hidden(comment.isHidden())
                         .createdAt(comment.getCreatedAt())
                         .build())
                 .toList();
@@ -48,10 +49,10 @@ public class AdminCommentService {
 
     // ✅ Comment count (Insight cards)
     public long getCommentCount(Long blogId) {
-        if (!blogRepository.existsById(blogId)) {
+        if (!userBlogRepository.existsById(blogId)) {
             throw new BlogNotFoundException("Blog not found with id: " + blogId);
         }
-        return commentRepository.countByBlogId(blogId);
+        return adminCommentRepository.countByBlogId(blogId);
     }
 
     // ✅ Paginated comments (Admin full view)
@@ -61,7 +62,7 @@ public class AdminCommentService {
             int size
     ) {
 
-        Blog blog = blogRepository.findById(blogId)
+        Blog blog = userBlogRepository.findById(blogId)
                 .orElseThrow(() ->
                         new BlogNotFoundException("Blog not found with id: " + blogId)
                 );
@@ -72,13 +73,22 @@ public class AdminCommentService {
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
-        return commentRepository
+        return adminCommentRepository
                 .findByBlog(blog, pageable)
                 .map(comment -> AdminCommentResponseDTO.builder()
                         .id(comment.getId())
                         .authorName(comment.getUser().getUsername())
                         .text(comment.getText())
+                        .hidden(comment.isHidden())
                         .createdAt(comment.getCreatedAt())
                         .build());
+    }
+
+    public void toggleHide(Long commentId){
+        Comment comment = adminCommentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        comment.setHidden(!comment.isHidden());
+        adminCommentRepository.save(comment);
     }
 }

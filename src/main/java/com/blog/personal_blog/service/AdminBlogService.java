@@ -3,13 +3,13 @@ package com.blog.personal_blog.service;
 import com.blog.personal_blog.Enum.ReactionType;
 import com.blog.personal_blog.dto.AdminBlogRequestDTO;
 import com.blog.personal_blog.dto.BlogResponseDTO;
-import com.blog.personal_blog.dto.CommentResponseDTO;
 import com.blog.personal_blog.exception.BlogNotFoundException;
 import com.blog.personal_blog.model.Blog;
 import com.blog.personal_blog.model.User;
+import com.blog.personal_blog.repository.AdminCommentRepository;
 import com.blog.personal_blog.repository.BlogReactionRepository;
-import com.blog.personal_blog.repository.BlogRepository;
-import com.blog.personal_blog.repository.CommentRepository;
+import com.blog.personal_blog.repository.UserBlogRepository;
+import com.blog.personal_blog.repository.UserCommentRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -18,14 +18,14 @@ import java.util.Set;
 
 @Service
 public class AdminBlogService {
-    private final BlogRepository blogRepository;
+    private final UserBlogRepository userBlogRepository;
     private final BlogReactionRepository blogReactionRepository;
-    private final CommentRepository commentRepository;
+    private final AdminCommentRepository adminCommentRepository;
 
-    public AdminBlogService(BlogRepository blogRepository, BlogReactionRepository blogReactionRepository, CommentRepository commentRepository) {
-        this.blogRepository = blogRepository;
+    public AdminBlogService(UserBlogRepository userBlogRepository, BlogReactionRepository blogReactionRepository, UserCommentRepository userCommentRepository, AdminCommentRepository adminCommentRepository) {
+        this.userBlogRepository = userBlogRepository;
         this.blogReactionRepository = blogReactionRepository;
-        this.commentRepository = commentRepository;
+        this.adminCommentRepository = adminCommentRepository;
     }
 
     private BlogResponseDTO toResponse(Blog blog) {
@@ -37,7 +37,7 @@ public class AdminBlogService {
                 .tags(blog.getTags())
                 .likes(blogReactionRepository.countByBlogIdAndReactionType(blog.getId(), ReactionType.LIKE))
                 .dislikes(blogReactionRepository.countByBlogIdAndReactionType(blog.getId(), ReactionType.DISLIKE))
-                .commentCount(commentRepository.countByBlogId(blog.getId()))
+                .commentCount(adminCommentRepository.countByBlogId(blog.getId()))
                 .published(blog.isPublished())
                 .createdAt(blog.getCreatedAt())
                 .build();
@@ -52,12 +52,12 @@ public class AdminBlogService {
                 .published(false)
                 .build();
 
-        Blog saved = blogRepository.save(blog);
+        Blog saved = userBlogRepository.save(blog);
         return toResponse(saved);
     }
 
     public BlogResponseDTO updateBlog(Long id, AdminBlogRequestDTO adminBlogRequestDTO) {
-        Blog blog = blogRepository.findById(id)
+        Blog blog = userBlogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Blog not found"));
 
         blog.setTitle(adminBlogRequestDTO.getTitle());
@@ -65,26 +65,26 @@ public class AdminBlogService {
         blog.setTags(adminBlogRequestDTO.getTags());
         blog.setAuthor(adminBlogRequestDTO.getAuthor());
 
-        return toResponse(blogRepository.save(blog));
+        return toResponse(userBlogRepository.save(blog));
     }
 
     public void deleteBlog(Long id) {
-        Blog blog = blogRepository.findById(id)
+        Blog blog = userBlogRepository.findById(id)
                 .orElseThrow(() -> new BlogNotFoundException("Blog not found"));
 
         if (blog.isPublished()) {
             throw new IllegalStateException("Cannot delete a published blog");
         }
 
-        blogRepository.delete(blog);
+        userBlogRepository.delete(blog);
     }
 
     public BlogResponseDTO togglePublish(Long id) {
-        Blog blog = blogRepository.findById(id)
+        Blog blog = userBlogRepository.findById(id)
                 .orElseThrow(() -> new BlogNotFoundException("Blog not found"));
 
         blog.setPublished(!blog.isPublished());
-        return toResponse(blogRepository.save(blog));
+        return toResponse(userBlogRepository.save(blog));
     }
 
     public List<BlogResponseDTO> getAllBlogsForAdmin(
@@ -110,15 +110,15 @@ public class AdminBlogService {
 
         if(hasStatus && hasSearch){
             boolean published = status.equalsIgnoreCase("PUBLISHED");
-            blogs = blogRepository.findByPublishedAndTitleContainingIgnoreCase(
+            blogs = userBlogRepository.findByPublishedAndTitleContainingIgnoreCase(
                     published, search, sort);
         }else if(hasStatus){
             boolean published = status.equalsIgnoreCase("PUBLISHED");
-            blogs = blogRepository.findByPublished(published, sort);
+            blogs = userBlogRepository.findByPublished(published, sort);
         } else if (hasSearch) {
-            blogs = blogRepository.findByTitleContainingIgnoreCase(search, sort);
+            blogs = userBlogRepository.findByTitleContainingIgnoreCase(search, sort);
         }else{
-            blogs = blogRepository.findAll(sort);
+            blogs = userBlogRepository.findAll(sort);
         }
 
         return blogs.stream()
@@ -127,24 +127,9 @@ public class AdminBlogService {
     }
 
     public BlogResponseDTO getBlogById(Long id) {
-        Blog blog = blogRepository.findById(id)
+        Blog blog = userBlogRepository.findById(id)
                 .orElseThrow(() -> new BlogNotFoundException("Blog not found with id: " + id));;
 
         return toResponse(blog);
-    }
-
-    public List<CommentResponseDTO> getCommentByBlogId(Long blogId) {
-        Blog blog = blogRepository.findById(blogId)
-                .orElseThrow(() -> new BlogNotFoundException("Blog not found with Id: " + blogId));
-
-        return commentRepository.findByBlogOrderByCreatedAtDesc(blog)
-                .stream()
-                .map(comment -> CommentResponseDTO.builder()
-                        .id(comment.getId())
-                        .authorName(comment.getUser().getUsername())
-                        .text(comment.getText())
-                        .createdAt(comment.getCreatedAt())
-                        .build())
-                .toList();
     }
 }

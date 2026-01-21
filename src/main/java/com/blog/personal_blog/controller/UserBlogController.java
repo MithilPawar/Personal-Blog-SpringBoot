@@ -1,24 +1,22 @@
 package com.blog.personal_blog.controller;
 
-import com.blog.personal_blog.Enum.ReactionType;
 import com.blog.personal_blog.config.UserPrincipal;
 import com.blog.personal_blog.dto.BlogDTO;
 import com.blog.personal_blog.dto.ReactionRequestDTO;
-import com.blog.personal_blog.service.BlogServiceImpl;
-import com.blog.personal_blog.service.CommentServiceImpl;
+import com.blog.personal_blog.service.UserBlogServiceImpl;
+import com.blog.personal_blog.service.UserCommentServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/blogs")
-public class BlogController {
-    private final BlogServiceImpl blogService;
+public class UserBlogController {
+    private final UserBlogServiceImpl blogService;
 
-    public BlogController(BlogServiceImpl blogService, CommentServiceImpl commentService) {
+    public UserBlogController(UserBlogServiceImpl blogService, UserCommentServiceImpl commentService) {
         this.blogService = blogService;
     }
 

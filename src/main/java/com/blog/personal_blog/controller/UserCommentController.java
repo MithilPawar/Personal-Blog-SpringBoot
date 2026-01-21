@@ -2,9 +2,8 @@ package com.blog.personal_blog.controller;
 
 import com.blog.personal_blog.config.UserPrincipal;
 import com.blog.personal_blog.dto.CommentRequestDTO;
-import com.blog.personal_blog.dto.CommentResponseDTO;
-import com.blog.personal_blog.service.CommentService;
-import com.blog.personal_blog.service.CommentServiceImpl;
+import com.blog.personal_blog.dto.UserCommentResponseDTO;
+import com.blog.personal_blog.service.UserCommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -12,22 +11,22 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/blogs")
-public class CommentController {
-    private final CommentService commentService;
+public class UserCommentController {
+    private final UserCommentService userCommentService;
 
-    public CommentController(CommentService commentService){
-        this.commentService = commentService;
+    public UserCommentController(UserCommentService userCommentService){
+        this.userCommentService = userCommentService;
     }
 
     //Adding comment
     @PostMapping("/{id}/comments")
-    public ResponseEntity<CommentResponseDTO> addComment(
+    public ResponseEntity<UserCommentResponseDTO> addComment(
             @PathVariable("id") Long blogId,
             @RequestBody CommentRequestDTO requestDTO,
             @AuthenticationPrincipal UserPrincipal userPrincipal){
 
         return ResponseEntity.ok(
-                commentService.addComment(
+                userCommentService.addComment(
                         blogId,
                         requestDTO.getText(),
                         userPrincipal.getUser()
@@ -37,9 +36,9 @@ public class CommentController {
 
     //Getting comments
     @GetMapping("/{id}/comments")
-    public ResponseEntity<List<CommentResponseDTO>> getComments(
+    public ResponseEntity<List<UserCommentResponseDTO>> getComments(
             @PathVariable("id") Long blogId) {
 
-        return ResponseEntity.ok(commentService.getCommentByBlogId(blogId));
+        return ResponseEntity.ok(userCommentService.getCommentByBlogId(blogId));
     }
 }

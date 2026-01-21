@@ -6,7 +6,7 @@ import com.blog.personal_blog.dto.LoginRequestDTO;
 import com.blog.personal_blog.dto.LoginResponseDTO;
 import com.blog.personal_blog.dto.RegisterRequestDTO;
 import com.blog.personal_blog.model.User;
-import com.blog.personal_blog.repository.UserRepository;
+import com.blog.personal_blog.repository.UserProfileRepository;
 import com.blog.personal_blog.utils.JwtUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,20 +16,20 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
-    private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
-        this.userRepository = userRepository;
+    public AuthService(UserProfileRepository userProfileRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+        this.userProfileRepository = userProfileRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
     }
 
     public String register(RegisterRequestDTO registerRequestDTO){
-        if(userRepository.findByUsername(registerRequestDTO.getUsername()).isPresent()){
+        if(userProfileRepository.findByUsername(registerRequestDTO.getUsername()).isPresent()){
             return "Username already exists!";
         }
 
@@ -38,7 +38,7 @@ public class AuthService {
                 .password(passwordEncoder.encode(registerRequestDTO.getPassword()))
                 .role(Role.USER)
                 .build();
-        userRepository.save(user);
+        userProfileRepository.save(user);
         return "User registered successfully!";
     }
 

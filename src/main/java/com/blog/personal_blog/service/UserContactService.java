@@ -6,10 +6,10 @@ import com.blog.personal_blog.repository.ContactRepository;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ContactService {
+public class UserContactService {
     private final ContactRepository contactRepository;
 
-    public ContactService(ContactRepository contactRepository) {
+    public UserContactService(ContactRepository contactRepository) {
         this.contactRepository = contactRepository;
     }
 

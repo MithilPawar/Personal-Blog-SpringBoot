@@ -1,7 +1,7 @@
 package com.blog.personal_blog.controller;
 
 import com.blog.personal_blog.model.User;
-import com.blog.personal_blog.repository.UserRepository;
+import com.blog.personal_blog.repository.UserProfileRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/user")
-public class UserController {
-    private final UserRepository userRepository;
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+public class UserProfileController {
+    private final UserProfileRepository userProfileRepository;
+    public UserProfileController(UserProfileRepository userProfileRepository) {
+        this.userProfileRepository = userProfileRepository;
     }
 
     @GetMapping("/profile")
@@ -22,7 +22,7 @@ public class UserController {
 
         String username  = authentication.getName();
 
-        return userRepository.findByUsername(username)
+        return userProfileRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

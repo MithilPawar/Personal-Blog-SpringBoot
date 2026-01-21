@@ -3,6 +3,7 @@ package com.blog.personal_blog.controller;
 import com.blog.personal_blog.dto.AdminCommentResponseDTO;
 import com.blog.personal_blog.service.AdminCommentService;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,5 +36,11 @@ public class AdminCommentController {
     @GetMapping("/{id}/comments/count")
     public long getCommentsCount(@PathVariable Long id){
         return adminCommentService.getCommentCount(id);
+    }
+
+    @PatchMapping("/{commentId}/toggle-hide")
+    public ResponseEntity<Void> toggleHide(@PathVariable Long commentId){
+        adminCommentService.toggleHide(commentId);
+        return ResponseEntity.ok().build();
     }
 }

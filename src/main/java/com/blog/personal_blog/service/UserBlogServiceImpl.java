@@ -8,8 +8,8 @@ import com.blog.personal_blog.model.Blog;
 import com.blog.personal_blog.model.BlogReaction;
 import com.blog.personal_blog.model.User;
 import com.blog.personal_blog.repository.BlogReactionRepository;
-import com.blog.personal_blog.repository.BlogRepository;
-import com.blog.personal_blog.repository.CommentRepository;
+import com.blog.personal_blog.repository.UserBlogRepository;
+import com.blog.personal_blog.repository.UserCommentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,15 +17,15 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class BlogServiceImpl implements BlogService{
-    private final BlogRepository blogRepository;
+public class UserBlogServiceImpl implements UserBlogService {
+    private final UserBlogRepository userBlogRepository;
     private final BlogReactionRepository blogReactionRepository;
-    private final CommentRepository commentRepository;
+    private final UserCommentRepository userCommentRepository;
 
-    public BlogServiceImpl(BlogRepository blogRepository, BlogReactionRepository blogReactionRepository, CommentRepository commentRepository){
-        this.blogRepository  = blogRepository;
+    public UserBlogServiceImpl(UserBlogRepository userBlogRepository, BlogReactionRepository blogReactionRepository, UserCommentRepository userCommentRepository){
+        this.userBlogRepository = userBlogRepository;
         this.blogReactionRepository = blogReactionRepository;
-        this.commentRepository = commentRepository;
+        this.userCommentRepository = userCommentRepository;
     }
 
     private BlogDTO mapToDTO(Blog blog) {
@@ -37,7 +37,7 @@ public class BlogServiceImpl implements BlogService{
                 .tags(blog.getTags())
                 .likes(blogReactionRepository.countByBlogIdAndReactionType(blog.getId(), ReactionType.LIKE))
                 .dislikes(blogReactionRepository.countByBlogIdAndReactionType(blog.getId(), ReactionType.DISLIKE))
-                .commentCount(commentRepository.countByBlogId(blog.getId()))
+                .commentCount(userCommentRepository.countByBlogIdAndHiddenFalse(blog.getId()))
                 .createdAt(blog.getCreatedAt())
                 .updatedAt(blog.getUpdatedAt())
                 .build();
@@ -45,7 +45,7 @@ public class BlogServiceImpl implements BlogService{
 
     @Override
     public List<BlogDTO> getAllBlogs() {
-        return blogRepository
+        return userBlogRepository
                 .findByPublishedTrueOrderByCreatedAtDesc()
                 .stream()
                 .map(this::mapToDTO)
@@ -54,7 +54,7 @@ public class BlogServiceImpl implements BlogService{
 
     @Override
     public BlogDTO getBlogById(Long id) {
-        Blog blog = blogRepository.findById(id)
+        Blog blog = userBlogRepository.findById(id)
                 .filter(Blog :: isPublished)
                 .orElseThrow(() -> new BlogNotFoundException("Blog not found with Id: " + id));
 
@@ -63,7 +63,7 @@ public class BlogServiceImpl implements BlogService{
 
     @Override
     public void react(Long blogId, ReactionType reactionType, User user){
-        Blog blog = blogRepository.findById(blogId)
+        Blog blog = userBlogRepository.findById(blogId)
                 .orElseThrow(() -> new BlogNotFoundException("Blog not found with Id: " + blogId));
 
         Optional<BlogReaction> existingReaction = blogReactionRepository.findByBlogIdAndUserId(blogId, user.getId());
