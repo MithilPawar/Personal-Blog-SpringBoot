@@ -4,6 +4,7 @@ import com.blog.personal_blog.config.UserPrincipal;
 import com.blog.personal_blog.dto.CommentRequestDTO;
 import com.blog.personal_blog.dto.UserCommentResponseDTO;
 import com.blog.personal_blog.service.UserCommentService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class UserCommentController {
     @PostMapping("/{id}/comments")
     public ResponseEntity<UserCommentResponseDTO> addComment(
             @PathVariable("id") Long blogId,
-            @RequestBody CommentRequestDTO requestDTO,
+            @Valid @RequestBody CommentRequestDTO requestDTO,
             @AuthenticationPrincipal UserPrincipal userPrincipal){
 
         return ResponseEntity.ok(

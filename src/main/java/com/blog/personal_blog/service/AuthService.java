@@ -28,9 +28,9 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
     }
 
-    public String register(RegisterRequestDTO registerRequestDTO){
+    public LoginResponseDTO register(RegisterRequestDTO registerRequestDTO){
         if(userProfileRepository.findByUsername(registerRequestDTO.getUsername()).isPresent()){
-            return "Username already exists!";
+            throw new IllegalArgumentException("Username already exists!");
         }
 
         User user = User.builder()
@@ -38,8 +38,15 @@ public class AuthService {
                 .password(passwordEncoder.encode(registerRequestDTO.getPassword()))
                 .role(Role.USER)
                 .build();
-        userProfileRepository.save(user);
-        return "User registered successfully!";
+        User savedUser = userProfileRepository.save(user);
+
+        String token = jwtUtil.generateToken(savedUser.getUsername(), savedUser.getRole().name());
+
+        return new LoginResponseDTO(
+                token,
+                savedUser.getUsername(),
+                savedUser.getRole().name()
+        );
     }
 
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO){
@@ -52,7 +59,6 @@ public class AuthService {
                 userPrincipal.getUsername(),
                 userPrincipal.getUser().getRole().name());
 
-        System.out.println(userPrincipal.getUser().getRole().name());
         return new LoginResponseDTO(
                 token,
                 userPrincipal.getUsername(),

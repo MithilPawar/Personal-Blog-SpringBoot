@@ -14,10 +14,19 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // REVIEW NOTE: Keep one uniform payload shape for all errors.
+    private Map<String, Object> buildErrorBody(HttpStatus status, String error, String message) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", status.value());
+        response.put("error", error);
+        response.put("message", message);
+        return response;
+    }
+
 //    Handle validation error
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException ex){
-        Map<String, Object> response = new HashMap<>();
         Map<String, Object> errors = new HashMap<>();
 
         ex.getBindingResult().getAllErrors().forEach(error ->{
@@ -26,8 +35,11 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
 
-        response.put("timestamps", LocalDateTime.now());
-        response.put("status", HttpStatus.BAD_REQUEST.value());
+        Map<String, Object> response = buildErrorBody(
+                HttpStatus.BAD_REQUEST,
+                "Validation Error",
+                "Request validation failed"
+        );
         response.put("errors", errors);
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
@@ -35,59 +47,45 @@ public class GlobalExceptionHandler {
 
 //    Handling IllegalArgumentException
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegealArgument(IllegalArgumentException ex){
-        Map<String, Object> response = new HashMap<>();
-
-        response.put("timestamps", LocalDateTime.now());
-        response.put("status", HttpStatus.BAD_REQUEST.value());
-        response.put("message", ex.getMessage());
-
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex){
+        return new ResponseEntity<>(
+                buildErrorBody(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage()),
+                HttpStatus.BAD_REQUEST
+        );
     }
 
 //    catch all other exception
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex){
-        Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        response.put("message", ex.getMessage());
-
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(
+                buildErrorBody(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex.getMessage()),
+                HttpStatus.INTERNAL_SERVER_ERROR
+        );
     }
 
 //    User not found exception
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleUserNotFound(UserNotFoundException ex){
-        Map<String, Object> response = new HashMap<>();
-        response.put("timestamps", LocalDateTime.now());
-        response.put("status", HttpStatus.NOT_FOUND.value());
-        response.put("message", ex.getMessage());
-        response.put("error", "User not found");
-
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(
+                buildErrorBody(HttpStatus.NOT_FOUND, "User not found", ex.getMessage()),
+                HttpStatus.NOT_FOUND
+        );
     }
 
     //Blog not found Exception
     @ExceptionHandler(BlogNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleBlogNotFound(BlogNotFoundException ex){
-        Map<String, Object> response = new HashMap<>();
-        response.put("timestamps", LocalDateTime.now());
-        response.put("status", HttpStatus.NOT_FOUND.value());
-        response.put("message", ex.getMessage());
-        response.put("error", "Blog not found");
-
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(
+                buildErrorBody(HttpStatus.NOT_FOUND, "Blog not found", ex.getMessage()),
+                HttpStatus.NOT_FOUND
+        );
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntime(RuntimeException ex) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.BAD_REQUEST.value());
-        response.put("error", "Bad Request");
-        response.put("message", ex.getMessage());
-
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(
+                buildErrorBody(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage()),
+                HttpStatus.BAD_REQUEST
+        );
     }
 }

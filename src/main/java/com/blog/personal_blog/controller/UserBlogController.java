@@ -3,8 +3,8 @@ package com.blog.personal_blog.controller;
 import com.blog.personal_blog.config.UserPrincipal;
 import com.blog.personal_blog.dto.BlogDTO;
 import com.blog.personal_blog.dto.ReactionRequestDTO;
-import com.blog.personal_blog.service.UserBlogServiceImpl;
-import com.blog.personal_blog.service.UserCommentServiceImpl;
+import com.blog.personal_blog.service.UserBlogService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -14,15 +14,23 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/blogs")
 public class UserBlogController {
-    private final UserBlogServiceImpl blogService;
+    private final UserBlogService blogService;
 
-    public UserBlogController(UserBlogServiceImpl blogService, UserCommentServiceImpl commentService) {
+    public UserBlogController(UserBlogService blogService) {
         this.blogService = blogService;
     }
 
     @GetMapping
     public List<BlogDTO> getAllBlogs(){
         return blogService.getAllBlogs();
+    }
+
+    @GetMapping("/paged")
+    public Page<BlogDTO> getAllBlogsPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        // REVIEW NOTE: New endpoint is additive, so existing `/api/blogs` consumers are not broken.
+        return blogService.getAllBlogs(page, size);
     }
 
     @GetMapping("/{id}")

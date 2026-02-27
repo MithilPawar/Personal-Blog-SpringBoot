@@ -67,9 +67,12 @@ public class AdminCommentService {
                         new BlogNotFoundException("Blog not found with id: " + blogId)
                 );
 
+        int safePage = Math.max(page, 0);
+        int safeSize = size <= 0 ? 10 : Math.min(size, 100);
+
         Pageable pageable = PageRequest.of(
-                page,
-                size,
+                safePage,
+                safeSize,
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
 

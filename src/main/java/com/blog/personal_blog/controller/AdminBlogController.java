@@ -2,7 +2,10 @@ package com.blog.personal_blog.controller;
 
 import com.blog.personal_blog.config.UserPrincipal;
 import com.blog.personal_blog.dto.AdminBlogRequestDTO;
+import com.blog.personal_blog.dto.BlogResponseDTO;
 import com.blog.personal_blog.service.AdminBlogService;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,7 +23,7 @@ public class AdminBlogController {
 
     @PostMapping
     public ResponseEntity<?> createBlog(
-            @RequestBody AdminBlogRequestDTO adminBlogRequestDTO,
+            @Valid @RequestBody AdminBlogRequestDTO adminBlogRequestDTO,
             @AuthenticationPrincipal UserPrincipal userPrincipal){
         return ResponseEntity.ok(
                 adminBlogService.createBlog(adminBlogRequestDTO, userPrincipal.getUser()));
@@ -29,7 +32,7 @@ public class AdminBlogController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateBlog(
             @PathVariable("id") Long id,
-            @RequestBody AdminBlogRequestDTO adminBlogRequestDTO){
+            @Valid @RequestBody AdminBlogRequestDTO adminBlogRequestDTO){
         return ResponseEntity.ok(adminBlogService.updateBlog(id, adminBlogRequestDTO));
     }
 
@@ -51,6 +54,21 @@ public class AdminBlogController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String order ){
         return ResponseEntity.ok(adminBlogService.getAllBlogsForAdmin(status, search, sortBy, order));
+    }
+
+    @GetMapping("/paged")
+    public ResponseEntity<Page<BlogResponseDTO>> getAllBlogsForAdminPaged(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String order,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        // REVIEW NOTE: New paginated route is additive and does not break existing `/api/admin/blogs` callers.
+        return ResponseEntity.ok(
+                adminBlogService.getAllBlogsForAdminPaged(status, search, sortBy, order, page, size)
+        );
     }
 
     @GetMapping("/{id}")

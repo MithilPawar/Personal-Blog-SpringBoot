@@ -1,6 +1,6 @@
 package com.blog.personal_blog.controller;
 
-import com.blog.personal_blog.model.User;
+import com.blog.personal_blog.dto.UserProfileDTO;
 import com.blog.personal_blog.repository.UserProfileRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,12 +17,18 @@ public class UserProfileController {
     }
 
     @GetMapping("/profile")
-    public User getCurrentUserProfile(){
+    public UserProfileDTO getCurrentUserProfile(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         String username  = authentication.getName();
 
-        return userProfileRepository.findByUsername(username)
+        var user = userProfileRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return new UserProfileDTO(
+                user.getUsername(),
+                user.getRole().name(),
+                user.isEnabled()
+        );
     }
 }

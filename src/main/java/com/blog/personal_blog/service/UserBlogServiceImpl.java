@@ -10,9 +10,16 @@ import com.blog.personal_blog.model.User;
 import com.blog.personal_blog.repository.BlogReactionRepository;
 import com.blog.personal_blog.repository.UserBlogRepository;
 import com.blog.personal_blog.repository.UserCommentRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -28,28 +35,87 @@ public class UserBlogServiceImpl implements UserBlogService {
         this.userCommentRepository = userCommentRepository;
     }
 
-    private BlogDTO mapToDTO(Blog blog) {
+    private BlogDTO mapToDTO(Blog blog, long likes, long dislikes, long commentCount) {
         return BlogDTO.builder()
                 .id(blog.getId())
                 .title(blog.getTitle())
                 .content(blog.getContent())
                 .author(blog.getAuthor())
                 .tags(blog.getTags())
-                .likes(blogReactionRepository.countByBlogIdAndReactionType(blog.getId(), ReactionType.LIKE))
-                .dislikes(blogReactionRepository.countByBlogIdAndReactionType(blog.getId(), ReactionType.DISLIKE))
-                .commentCount(userCommentRepository.countByBlogIdAndHiddenFalse(blog.getId()))
+                .likes(likes)
+                .dislikes(dislikes)
+                .commentCount(commentCount)
                 .createdAt(blog.getCreatedAt())
                 .updatedAt(blog.getUpdatedAt())
                 .build();
     }
 
+    private List<BlogDTO> mapBlogsWithAggregates(List<Blog> blogs) {
+        if (blogs.isEmpty()) {
+            return List.of();
+        }
+
+        // REVIEW NOTE: Build blog ID list once, then aggregate likes/dislikes/comments in 3 grouped queries.
+        List<Long> blogIds = blogs.stream().map(Blog::getId).toList();
+        Map<Long, Long> likeCounts = new HashMap<>();
+        Map<Long, Long> dislikeCounts = new HashMap<>();
+        Map<Long, Long> commentCounts = new HashMap<>();
+
+        List<Object[]> reactionRows = blogReactionRepository.countReactionsByBlogIds(blogIds);
+        for (Object[] row : reactionRows) {
+            Long blogId = (Long) row[0];
+            ReactionType reactionType = (ReactionType) row[1];
+            Long count = (Long) row[2];
+
+            if (reactionType == ReactionType.LIKE) {
+                likeCounts.put(blogId, count);
+            } else if (reactionType == ReactionType.DISLIKE) {
+                dislikeCounts.put(blogId, count);
+            }
+        }
+
+        List<Object[]> commentRows = userCommentRepository.countVisibleCommentsByBlogIds(blogIds);
+        for (Object[] row : commentRows) {
+            commentCounts.put((Long) row[0], (Long) row[1]);
+        }
+
+        return blogs.stream()
+                .map(blog -> mapToDTO(
+                        blog,
+                        likeCounts.getOrDefault(blog.getId(), 0L),
+                        dislikeCounts.getOrDefault(blog.getId(), 0L),
+                        commentCounts.getOrDefault(blog.getId(), 0L)
+                ))
+                .toList();
+    }
+
     @Override
     public List<BlogDTO> getAllBlogs() {
-        return userBlogRepository
-                .findByPublishedTrueOrderByCreatedAtDesc()
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+        List<Blog> blogs = userBlogRepository.findByPublishedTrueOrderByCreatedAtDesc();
+        return mapBlogsWithAggregates(blogs);
+    }
+
+    @Override
+    public Page<BlogDTO> getAllBlogs(int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = size <= 0 ? 10 : Math.min(size, 100);
+
+        Pageable pageable = PageRequest.of(
+                safePage,
+                safeSize,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        Page<Blog> blogPage = userBlogRepository.findByPublishedTrue(pageable);
+        List<BlogDTO> blogDTOs = mapBlogsWithAggregates(blogPage.getContent());
+        Map<Long, BlogDTO> dtoById = blogDTOs.stream()
+            .collect(Collectors.toMap(BlogDTO::getId, dto -> dto));
+
+        List<BlogDTO> orderedDtos = blogPage.getContent().stream()
+            .map(blog -> dtoById.get(blog.getId()))
+            .toList();
+
+        return new PageImpl<>(orderedDtos, pageable, blogPage.getTotalElements());
     }
 
     @Override
@@ -58,7 +124,11 @@ public class UserBlogServiceImpl implements UserBlogService {
                 .filter(Blog :: isPublished)
                 .orElseThrow(() -> new BlogNotFoundException("Blog not found with Id: " + id));
 
-        return mapToDTO(blog);
+        long likes = blogReactionRepository.countByBlogIdAndReactionType(blog.getId(), ReactionType.LIKE);
+        long dislikes = blogReactionRepository.countByBlogIdAndReactionType(blog.getId(), ReactionType.DISLIKE);
+        long commentCount = userCommentRepository.countByBlogIdAndHiddenFalse(blog.getId());
+
+        return mapToDTO(blog, likes, dislikes, commentCount);
     }
 
     @Override

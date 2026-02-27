@@ -20,10 +20,10 @@ public class AdminCommentController {
     }
 
     @GetMapping("/{blogId}")
-    public Page<AdminCommentResponseDTO> getCommentsByBLog(
+    public Page<AdminCommentResponseDTO> getCommentsByBlog(
             @PathVariable Long blogId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "0") int size
+            @RequestParam(defaultValue = "10") int size
     ){
         return adminCommentService.getCommentsByBlog(blogId, page, size);
     }
