@@ -2,6 +2,7 @@ package com.blog.personal_blog.service;
 
 import com.blog.personal_blog.dto.AdminCommentResponseDTO;
 import com.blog.personal_blog.exception.BlogNotFoundException;
+import com.blog.personal_blog.exception.CommentNotFoundException;
 import com.blog.personal_blog.model.Blog;
 import com.blog.personal_blog.model.Comment;
 import com.blog.personal_blog.repository.AdminCommentRepository;
@@ -34,9 +35,8 @@ public class AdminCommentService {
                 );
 
         return adminCommentRepository
-                .findTop5ByBlogOrderByCreatedAtDesc(blog)
+                .findTop3ByBlogOrderByCreatedAtDesc(blog)
                 .stream()
-                .limit(3)
                 .map(comment -> AdminCommentResponseDTO.builder()
                         .id(comment.getId())
                         .authorName(comment.getUser().getUsername())
@@ -89,7 +89,7 @@ public class AdminCommentService {
 
     public void toggleHide(Long commentId){
         Comment comment = adminCommentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                                .orElseThrow(() -> new CommentNotFoundException("Comment not found with id: " + commentId));
 
         comment.setHidden(!comment.isHidden());
         adminCommentRepository.save(comment);

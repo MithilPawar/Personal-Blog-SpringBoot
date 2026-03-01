@@ -2,6 +2,7 @@ package com.blog.personal_blog.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -81,11 +82,27 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, Object>> handleRuntime(RuntimeException ex) {
+    @ExceptionHandler(CommentNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleCommentNotFound(CommentNotFoundException ex){
         return new ResponseEntity<>(
-                buildErrorBody(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage()),
-                HttpStatus.BAD_REQUEST
+                buildErrorBody(HttpStatus.NOT_FOUND, "Comment not found", ex.getMessage()),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex){
+        return new ResponseEntity<>(
+                buildErrorBody(HttpStatus.CONFLICT, "Conflict", ex.getMessage()),
+                HttpStatus.CONFLICT
+        );
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthentication(AuthenticationException ex){
+        return new ResponseEntity<>(
+                buildErrorBody(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage()),
+                HttpStatus.UNAUTHORIZED
         );
     }
 }

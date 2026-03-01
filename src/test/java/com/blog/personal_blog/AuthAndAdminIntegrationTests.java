@@ -116,7 +116,7 @@ class AuthAndAdminIntegrationTests {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidLoginBody))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

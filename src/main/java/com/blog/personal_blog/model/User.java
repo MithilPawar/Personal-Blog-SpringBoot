@@ -26,9 +26,11 @@ public class User {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private Role role = Role.USER;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean enabled = true;
 
     @Temporal(TemporalType.TIMESTAMP)

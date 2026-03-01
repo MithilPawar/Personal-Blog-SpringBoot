@@ -33,6 +33,7 @@ public class Comment {
     private User user;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean hidden = false;
 
     @PrePersist

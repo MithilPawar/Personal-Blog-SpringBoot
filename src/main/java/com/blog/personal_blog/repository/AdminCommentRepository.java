@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface AdminCommentRepository extends JpaRepository<Comment, Long> {
     //    For Admin comments which includes hidden
-    List<Comment> findTop5ByBlogOrderByCreatedAtDesc(Blog blog);
+    List<Comment> findTop3ByBlogOrderByCreatedAtDesc(Blog blog);
 
     //    Admin Only which includes hidden
     Page<Comment> findByBlog(Blog blog, Pageable pageable);

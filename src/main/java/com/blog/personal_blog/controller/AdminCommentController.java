@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin/blogs/comment")
+@RequestMapping("/api/admin")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminCommentController {
     private final AdminCommentService adminCommentService;
@@ -19,7 +19,7 @@ public class AdminCommentController {
         this.adminCommentService = adminCommentService;
     }
 
-    @GetMapping("/{blogId}")
+    @GetMapping("/blogs/{blogId}/comments")
     public Page<AdminCommentResponseDTO> getCommentsByBlog(
             @PathVariable Long blogId,
             @RequestParam(defaultValue = "0") int page,
@@ -28,17 +28,17 @@ public class AdminCommentController {
         return adminCommentService.getCommentsByBlog(blogId, page, size);
     }
 
-    @GetMapping("/{id}/comments/recent")
-    public List<AdminCommentResponseDTO> getRecentComments(@PathVariable Long id){
-        return adminCommentService.getRecentComments(id);
+    @GetMapping("/blogs/{blogId}/comments/recent")
+    public List<AdminCommentResponseDTO> getRecentComments(@PathVariable Long blogId){
+        return adminCommentService.getRecentComments(blogId);
     }
 
-    @GetMapping("/{id}/comments/count")
-    public long getCommentsCount(@PathVariable Long id){
-        return adminCommentService.getCommentCount(id);
+    @GetMapping("/blogs/{blogId}/comments/count")
+    public long getCommentsCount(@PathVariable Long blogId){
+        return adminCommentService.getCommentCount(blogId);
     }
 
-    @PatchMapping("/{commentId}/toggle-hide")
+    @PatchMapping("/comments/{commentId}/toggle-hide")
     public ResponseEntity<Void> toggleHide(@PathVariable Long commentId){
         adminCommentService.toggleHide(commentId);
         return ResponseEntity.ok().build();

@@ -32,6 +32,7 @@ public class Blog {
     private String tags;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean published = false;
 
     private LocalDateTime createdAt;
