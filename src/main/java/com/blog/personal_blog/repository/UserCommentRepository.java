@@ -2,6 +2,7 @@ package com.blog.personal_blog.repository;
 
 import com.blog.personal_blog.model.Blog;
 import com.blog.personal_blog.model.Comment;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +12,7 @@ import java.util.List;
 @Repository
 public interface UserCommentRepository extends JpaRepository<Comment, Long> {
 //   For User comments
+    @EntityGraph(attributePaths = "user")
     List<Comment> findByBlogAndHiddenFalseOrderByCreatedAtDesc(Blog blog);
 
 //    For User comments

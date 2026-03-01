@@ -26,6 +26,10 @@ public class UserCommentController {
             @Valid @RequestBody CommentRequestDTO requestDTO,
             @AuthenticationPrincipal UserPrincipal userPrincipal){
 
+        if (userPrincipal == null) {
+            return ResponseEntity.status(401).build();
+        }
+
         return ResponseEntity.ok(
                 userCommentService.addComment(
                         blogId,

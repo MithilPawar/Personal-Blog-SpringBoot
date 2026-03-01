@@ -8,6 +8,7 @@ import com.blog.personal_blog.model.User;
 import com.blog.personal_blog.repository.UserBlogRepository;
 import com.blog.personal_blog.repository.UserCommentRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -47,6 +48,7 @@ public class UserCommentServiceImpl implements UserCommentService {
     }
 
     @Override
+        @Transactional(readOnly = true)
     public List<UserCommentResponseDTO> getCommentByBlogId(Long blogId) {
         Blog blog = userBlogRepository.findById(blogId)
                 .orElseThrow(() -> new BlogNotFoundException("Blog not found with Id: " + blogId));
