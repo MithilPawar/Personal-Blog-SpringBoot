@@ -62,6 +62,24 @@ class AuthAndAdminIntegrationTests {
     }
 
     @Test
+    void registerShouldRejectUnknownFields() throws Exception {
+                String username = shortUsername("u");
+
+        String requestBody = """
+                {
+                  "username": "%s",
+                  "password": "password123",
+                  "role": "ADMIN"
+                }
+                """.formatted(username);
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void loginShouldSucceedWithValidCredentials() throws Exception {
                 String username = shortUsername("u");
 

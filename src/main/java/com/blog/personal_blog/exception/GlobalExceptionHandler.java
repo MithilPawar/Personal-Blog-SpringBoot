@@ -2,6 +2,7 @@ package com.blog.personal_blog.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -51,6 +52,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex){
         return new ResponseEntity<>(
                 buildErrorBody(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage()),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex){
+        return new ResponseEntity<>(
+                buildErrorBody(HttpStatus.BAD_REQUEST, "Bad Request", "Malformed or invalid JSON request"),
                 HttpStatus.BAD_REQUEST
         );
     }
